@@ -19,6 +19,14 @@ struct PhysicsCategory {
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    func random() -> CGFloat {
+        return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
+    }
+    
+    
+    func random(#min: CGFloat, max: CGFloat) -> CGFloat {
+        return random() * (max - min) + min
+    }
     
     func createCharacterNode() {
         character.position = CGPoint(x:CGRectGetMidX(self.frame), y:CGRectGetMinY(self.frame) + 100)
@@ -32,7 +40,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func createCupcakeNode(){
-        cupcake.position = CGPoint(x: CGRectGetMidX(self.frame) - 50, y: CGRectGetMidY(self.frame) + 250)
+        let startingX = random(min: self.frame.minX, max: self.frame.maxX)
+        
+        cupcake.position = CGPoint(x: startingX, y: CGRectGetMidY(self.frame) + 250)
         cupcake.physicsBody = SKPhysicsBody(rectangleOfSize: cupcake.size)
         cupcake.physicsBody?.dynamic = true
         cupcake.physicsBody?.usesPreciseCollisionDetection = true
@@ -48,7 +58,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMoveToView(view: SKView) {
         createCharacterNode()
-        createCupcakeNode()
         
         physicsWorld.contactDelegate = self
         
@@ -68,6 +77,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     motionManager.accelerometerActive == true
                     let action = SKAction.moveTo(CGPointMake(destinationX, destinationY), duration: 1)
                     character.runAction(action)
+                    
                 }
                 else if (data.acceleration.x > 0.25) { //tilts left
                     var destinationX = (CGFloat(data.acceleration.x) * CGFloat(kPlayerSpeed) + CGFloat(currentX))
@@ -78,6 +88,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             }
         }
+    
+        runAction(SKAction.repeatActionForever(
+            SKAction.sequence([
+                SKAction.runBlock(createCupcakeNode),
+                SKAction.waitForDuration(0.05)
+                ])
+            ))
     }
     
     func characterHasCaughtCupcake(cupcake:SKSpriteNode) {
