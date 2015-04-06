@@ -11,14 +11,18 @@ import SpriteKit
 
 let kPlayerSpeed = 250
 let character = SKSpriteNode(imageNamed: "daisy")
-let cupcake = SKSpriteNode(imageNamed: "cupcake")
+
+public var score: Int = 0
+
+var scoreLabel: UILabel = UILabel()
 
 struct PhysicsCategory {
-    static let character: UInt32 = 0x1 << 0
-    static let cupcake: UInt32 = 0x1 << 0
+    static let character: UInt32 = 0b1
+    static let cupcake: UInt32 = 0b10
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    
     func random() -> CGFloat {
         return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
     }
@@ -40,9 +44,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func createCupcakeNode(){
+        var cupcake = SKSpriteNode(imageNamed: "cupcake")
         let startingX = random(min: self.frame.minX, max: self.frame.maxX)
         
-        cupcake.position = CGPoint(x: startingX, y: CGRectGetMidY(self.frame) + 250)
+        cupcake.position = CGPoint(x: startingX, y: CGRectGetMaxY(self.frame) - 50)
         cupcake.physicsBody = SKPhysicsBody(rectangleOfSize: cupcake.size)
         cupcake.physicsBody?.dynamic = true
         cupcake.physicsBody?.usesPreciseCollisionDetection = true
@@ -99,7 +104,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func characterHasCaughtCupcake(cupcake:SKSpriteNode) {
         println("nom")
+        score += 10
         cupcake.removeFromParent()
+        println(score)
+        updateScoreLabel()
+    }
+   
+    func updateScoreLabel() {
+        scoreLabel.text = String(score)
     }
     
     func didBeginContact(contact: SKPhysicsContact) {
@@ -114,8 +126,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             secondBody = contact.bodyA
         }
         
-        if (firstBody.categoryBitMask & PhysicsCategory.cupcake != 0) &&
-            (secondBody.categoryBitMask & PhysicsCategory.character != 0) {
+        if (firstBody.contactTestBitMask & PhysicsCategory.cupcake != 0) &&
+            (secondBody.contactTestBitMask & PhysicsCategory.character != 0) {
                 characterHasCaughtCupcake(firstBody.node as SKSpriteNode)
         }
     }
