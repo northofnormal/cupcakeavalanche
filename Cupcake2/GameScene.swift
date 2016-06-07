@@ -15,9 +15,22 @@ let character = SKSpriteNode(imageNamed: "daisy")
 struct PhysicsCategory {
     static let character: UInt32 = 0x1 << 0
     static let cupcake: UInt32 = 0x1 << 0
+    static let kale: UInt32 = 0x1 << 0 
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    
+    var score: Int = 0
+    
+    override init() {
+        score = 0
+        super.init()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
     func random() -> CGFloat {
         return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
     }
@@ -26,6 +39,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return random() * (max - min) + min
     }
     
+    // move to class
     func createCharacterNode() {
         character.position = CGPoint(x:CGRectGetMidX(self.frame), y:CGRectGetMinY(self.frame) + 100)
         character.physicsBody = SKPhysicsBody(rectangleOfSize: character.size)
@@ -39,6 +53,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.addChild(character)
     }
     
+    // move to class
     func createCupcakeNode(){
         let cupcake = SKSpriteNode(imageNamed: "cupcake")
         
@@ -64,6 +79,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.addChild(cupcake)
     }
     
+    
+    // maybe don't worry about this until everyone is in a class
+    func createKaleNode() {
+        let kale = SKSpriteNode(imageNamed: "kale")
+        
+        let startingX = random(frame.minX, max: self.frame.maxX)
+        
+        kale.position = CGPoint(x: startingX, y: CGRectGetMidY(self.frame) + 250)
+        kale.physicsBody = SKPhysicsBody(rectangleOfSize: kale.size)
+        
+        guard let physicsBody = kale.physicsBody else {
+            print("Taking a poop")
+            return
+        }
+        
+        physicsBody.dynamic = true
+        physicsBody.usesPreciseCollisionDetection = true
+        physicsBody.affectedByGravity = true;
+        physicsBody.contactTestBitMask = PhysicsCategory.cupcake
+        
+        let spin = SKAction.rotateByAngle(CGFloat(M_PI), duration:0.25)
+        
+        kale.runAction(SKAction.repeatActionForever(spin))
+        
+        self.addChild(kale)
+
+    }
+    
     override func didMoveToView(view: SKView) {
         createCharacterNode()
         
@@ -79,7 +122,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 _ = CGPoint(x: CGRectGetMaxX(self.frame), y: currentY)
                 _ = CGPoint(x: CGRectGetMinX(self.frame), y: currentY)
                 
-                // lots of forced unwrapping here, set up some if-lets
                 guard let movementData = data else { return }
                 if (movementData.acceleration.x < -0.25) { //tilts right
                     let destinationX = (CGFloat(movementData.acceleration.x) * CGFloat(kPlayerSpeed) + CGFloat(currentX))
@@ -102,14 +144,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         runAction(SKAction.repeatActionForever(
             SKAction.sequence([
                 SKAction.runBlock(createCupcakeNode),
+                SKAction.waitForDuration(0.05),
+                SKAction.runBlock(createKaleNode),
                 SKAction.waitForDuration(0.05)
                 ])
             ))
     }
     
     func characterHasCaughtCupcake(cupcake:SKSpriteNode) {
-        print("nom")
+        score += 10
+        print("nom: \(score)")
+        
         cupcake.removeFromParent()
+    }
+    
+    func characterHasCaughtKale(kale: SKSpriteNode) {
+        score -= 10
+        print("EWWWW: \(score)")
+        
+         kale.removeFromParent()
     }
     
     func didBeginContact(contact: SKPhysicsContact) {
@@ -124,10 +177,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             secondBody = contact.bodyA
         }
         
+        // the Else/Kale block is not getting hit at all
+        // maybe don't worry about it until we've refactored to classes 
         if (firstBody.categoryBitMask & PhysicsCategory.cupcake != 0) &&
             (secondBody.categoryBitMask & PhysicsCategory.character != 0) {
             // are we unexpectantly finding nil here? WHO WHERE WHY AAAARGH
-                characterHasCaughtCupcake(firstBody.node as! SKSpriteNode)
+            characterHasCaughtCupcake(firstBody.node as! SKSpriteNode)
+        } else if (firstBody.categoryBitMask & PhysicsCategory.kale != 0) &&
+            (secondBody.categoryBitMask & PhysicsCategory.character != 0) {
+            characterHasCaughtKale(firstBody.node as! SKSpriteNode)
         }
     }
     
