@@ -11,7 +11,6 @@ import SpriteKit
 
 let kPlayerSpeed = 250
 let character = SKSpriteNode(imageNamed: "daisy")
-let cupcake = SKSpriteNode(imageNamed: "cupcake")
 
 struct PhysicsCategory {
     static let character: UInt32 = 0x1 << 0
@@ -23,31 +22,40 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
     }
     
-    
-    func random(#min: CGFloat, max: CGFloat) -> CGFloat {
+    func random(min: CGFloat, max: CGFloat) -> CGFloat {
         return random() * (max - min) + min
     }
     
     func createCharacterNode() {
         character.position = CGPoint(x:CGRectGetMidX(self.frame), y:CGRectGetMinY(self.frame) + 100)
         character.physicsBody = SKPhysicsBody(rectangleOfSize: character.size)
-        character.physicsBody?.dynamic = false
-        character.physicsBody?.usesPreciseCollisionDetection = true
-        character.physicsBody?.affectedByGravity = false
-        character.physicsBody?.contactTestBitMask = PhysicsCategory.character
+        
+        guard let physicsBody = character.physicsBody else { return }
+        physicsBody.dynamic = false
+        physicsBody.usesPreciseCollisionDetection = true
+        physicsBody.affectedByGravity = false
+        physicsBody.contactTestBitMask = PhysicsCategory.character
         
         self.addChild(character)
     }
     
     func createCupcakeNode(){
-        let startingX = random(min: self.frame.minX, max: self.frame.maxX)
+        let cupcake = SKSpriteNode(imageNamed: "cupcake")
+        
+        let startingX = random(frame.minX, max: self.frame.maxX)
         
         cupcake.position = CGPoint(x: startingX, y: CGRectGetMidY(self.frame) + 250)
         cupcake.physicsBody = SKPhysicsBody(rectangleOfSize: cupcake.size)
-        cupcake.physicsBody?.dynamic = true
-        cupcake.physicsBody?.usesPreciseCollisionDetection = true
-        cupcake.physicsBody?.affectedByGravity = true;
-        cupcake.physicsBody?.contactTestBitMask = PhysicsCategory.cupcake
+        
+        guard let physicsBody = cupcake.physicsBody else {
+            print("Taking a poop")
+            return
+        }
+        
+        physicsBody.dynamic = true
+        physicsBody.usesPreciseCollisionDetection = true
+        physicsBody.affectedByGravity = true;
+        physicsBody.contactTestBitMask = PhysicsCategory.cupcake
         
         let spin = SKAction.rotateByAngle(CGFloat(M_PI), duration:0.25)
         
@@ -68,20 +76,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 let currentX = character.position.x
                 let currentY = character.position.y
                 
-                let maxX = CGPoint(x: CGRectGetMaxX(self.frame), y: currentY)
-                let minX = CGPoint(x: CGRectGetMinX(self.frame), y: currentY)
+                _ = CGPoint(x: CGRectGetMaxX(self.frame), y: currentY)
+                _ = CGPoint(x: CGRectGetMinX(self.frame), y: currentY)
                 
-                if (data.acceleration.x < -0.25) { //tilts right
-                    var destinationX = (CGFloat(data.acceleration.x) * CGFloat(kPlayerSpeed) + CGFloat(currentX))
-                    var destinationY = CGFloat(currentY)
+                // lots of forced unwrapping here, set up some if-lets
+                guard let movementData = data else { return }
+                if (movementData.acceleration.x < -0.25) { //tilts right
+                    let destinationX = (CGFloat(movementData.acceleration.x) * CGFloat(kPlayerSpeed) + CGFloat(currentX))
+                    let destinationY = CGFloat(currentY)
                     motionManager.accelerometerActive == true
                     let action = SKAction.moveTo(CGPointMake(destinationX, destinationY), duration: 1)
                     character.runAction(action)
                     
                 }
-                else if (data.acceleration.x > 0.25) { //tilts left
-                    var destinationX = (CGFloat(data.acceleration.x) * CGFloat(kPlayerSpeed) + CGFloat(currentX))
-                    var destinationY = CGFloat(currentY)
+                else if (movementData.acceleration.x > 0.25) { //tilts left
+                    let destinationX = (CGFloat(movementData.acceleration.x) * CGFloat(kPlayerSpeed) + CGFloat(currentX))
+                    let destinationY = CGFloat(currentY)
                     motionManager.accelerometerActive == true
                     let action = SKAction.moveTo(CGPointMake(destinationX, destinationY), duration: 1)
                     character.runAction(action)
@@ -98,7 +108,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func characterHasCaughtCupcake(cupcake:SKSpriteNode) {
-        println("nom")
+        print("nom")
         cupcake.removeFromParent()
     }
     
@@ -116,7 +126,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if (firstBody.categoryBitMask & PhysicsCategory.cupcake != 0) &&
             (secondBody.categoryBitMask & PhysicsCategory.character != 0) {
-                characterHasCaughtCupcake(firstBody.node as SKSpriteNode)
+            // are we unexpectantly finding nil here? WHO WHERE WHY AAAARGH
+                characterHasCaughtCupcake(firstBody.node as! SKSpriteNode)
         }
     }
     

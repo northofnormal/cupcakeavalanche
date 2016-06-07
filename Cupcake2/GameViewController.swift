@@ -11,14 +11,22 @@ import SpriteKit
 
 extension SKNode {
     class func unarchiveFromFile(file : NSString) -> SKNode? {
-        if let path = NSBundle.mainBundle().pathForResource(file, ofType: "sks") {
-            var sceneData = NSData(contentsOfFile: path, options: .DataReadingMappedIfSafe, error: nil)!
-            var archiver = NSKeyedUnarchiver(forReadingWithData: sceneData)
+        if let path = NSBundle.mainBundle().pathForResource(file as String, ofType: "sks") {
             
-            archiver.setClass(self.classForKeyedUnarchiver(), forClassName: "SKScene")
-            let scene = archiver.decodeObjectForKey(NSKeyedArchiveRootObjectKey) as GameScene
-            archiver.finishDecoding()
-            return scene
+            do {
+                let sceneData = try NSData(contentsOfFile: path, options: .DataReadingMappedIfSafe)
+                
+                let archiver = NSKeyedUnarchiver(forReadingWithData: sceneData)
+                
+                archiver.setClass(self.classForKeyedUnarchiver(), forClassName: "SKScene")
+                let scene = archiver.decodeObjectForKey(NSKeyedArchiveRootObjectKey) as! GameScene
+                archiver.finishDecoding()
+                return scene
+
+            } catch {
+                return nil
+            }
+            
         } else {
             return nil
         }
@@ -32,7 +40,7 @@ class GameViewController: UIViewController {
 
         if let scene = GameScene.unarchiveFromFile("GameScene") as? GameScene {
             // Configure the view.
-            let skView = self.view as SKView
+            let skView = self.view as! SKView
             skView.showsFPS = true
             skView.showsNodeCount = true
             
@@ -50,11 +58,11 @@ class GameViewController: UIViewController {
         return true
     }
 
-    override func supportedInterfaceOrientations() -> Int {
+    override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
         if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
-            return Int(UIInterfaceOrientationMask.AllButUpsideDown.rawValue)
+            return UIInterfaceOrientationMask.AllButUpsideDown
         } else {
-            return Int(UIInterfaceOrientationMask.All.rawValue)
+            return UIInterfaceOrientationMask.All
         }
     }
 
