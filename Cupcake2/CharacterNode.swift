@@ -12,18 +12,18 @@ import UIKit
 
 class CharacterNode: SKSpriteNode {
 
-    func createCharacterNode() {
-        character.position = CGPoint(x:CGRectGetMidX(self.frame), y:CGRectGetMinY(self.frame) + 100)
-        character.physicsBody = SKPhysicsBody(rectangleOfSize: character.size)
-        
-        guard let physicsBody = character.physicsBody else { return }
-        physicsBody.dynamic = false
-        physicsBody.usesPreciseCollisionDetection = true
-        physicsBody.affectedByGravity = false
-        physicsBody.contactTestBitMask = PhysicsCategory.character
-        
-        self.addChild(character)
-    }
+//    func createCharacterNode() {
+//        character.position = CGPoint(x:CGRectGetMidX(self.frame), y:CGRectGetMinY(self.frame) + 100)
+//        character.physicsBody = SKPhysicsBody(rectangleOfSize: character.size)
+//        
+//        guard let physicsBody = character.physicsBody else { return }
+//        physicsBody.dynamic = false
+//        physicsBody.usesPreciseCollisionDetection = true
+//        physicsBody.affectedByGravity = false
+//        physicsBody.contactTestBitMask = PhysicsCategory.character
+//        
+//        self.addChild(character)
+//    }
 
     
     
