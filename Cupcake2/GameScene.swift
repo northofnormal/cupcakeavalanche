@@ -9,17 +9,17 @@
 import CoreMotion
 import SpriteKit
 
-let kPlayerSpeed = 250
-let character = SKSpriteNode(imageNamed: "daisy")
-let scoreLabel = SKLabelNode(fontNamed: "Avenir")
-
-let characterCategory: UInt32 = 0x1 << 1
-let cupcakeCategory: UInt32 = 0x1 << 2
-let kaleCategory: UInt32 = 0x1 << 3
-
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var score: Int = 0
+    
+    let playerSpeed = 250
+    let character = SKSpriteNode(imageNamed: "daisy")
+    let scoreLabel = SKLabelNode(fontNamed: "Avenir")
+    
+    let characterCategory: UInt32 = 0x1 << 1
+    let cupcakeCategory: UInt32 = 0x1 << 2
+    let kaleCategory: UInt32 = 0x1 << 3
     
     override init() {
         super.init()
@@ -91,7 +91,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let kale = SKSpriteNode(imageNamed: "kale")
         let startingX = random(frame.minX, max: self.frame.maxX)
         
-        kale.position = CGPoint(x: startingX, y: CGRectGetMidY(self.frame) + 250)
+        kale.position = CGPoint(x: startingX, y: CGRectGetMaxY(self.frame))
         
         guard let texture = kale.texture else { return }
         kale.physicsBody = SKPhysicsBody(texture: texture, size: kale.size)
@@ -124,27 +124,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if (motionManager.accelerometerAvailable) {
             motionManager.startAccelerometerUpdatesToQueue(NSOperationQueue()) {
                 (data, error) in
-                let currentX = character.position.x
-                let currentY = character.position.y
+                let currentX = self.character.position.x
+                let currentY = self.character.position.y
                 
                 _ = CGPoint(x: CGRectGetMaxX(self.frame), y: currentY)
                 _ = CGPoint(x: CGRectGetMinX(self.frame), y: currentY)
                 
                 guard let movementData = data else { return }
                 if (movementData.acceleration.x < -0.25) { //tilts right
-                    let destinationX = (CGFloat(movementData.acceleration.x) * CGFloat(kPlayerSpeed) + CGFloat(currentX))
+                    let destinationX = (CGFloat(movementData.acceleration.x) * CGFloat(self.playerSpeed) + CGFloat(currentX))
                     let destinationY = CGFloat(currentY)
                     motionManager.accelerometerActive == true
                     let action = SKAction.moveTo(CGPointMake(destinationX, destinationY), duration: 1)
-                    character.runAction(action)
+                    self.character.runAction(action)
                     
                 }
                 else if (movementData.acceleration.x > 0.25) { //tilts left
-                    let destinationX = (CGFloat(movementData.acceleration.x) * CGFloat(kPlayerSpeed) + CGFloat(currentX))
+                    let destinationX = (CGFloat(movementData.acceleration.x) * CGFloat(self.playerSpeed) + CGFloat(currentX))
                     let destinationY = CGFloat(currentY)
                     motionManager.accelerometerActive == true
                     let action = SKAction.moveTo(CGPointMake(destinationX, destinationY), duration: 1)
-                    character.runAction(action)
+                    self.character.runAction(action)
                 }
             }
         }
