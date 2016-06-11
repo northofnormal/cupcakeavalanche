@@ -11,6 +11,7 @@ import SpriteKit
 
 let kPlayerSpeed = 250
 let character = SKSpriteNode(imageNamed: "daisy")
+let scoreLabel = SKLabelNode(fontNamed: "Avenir")
 
 let characterCategory: UInt32 = 0x1 << 1
 let cupcakeCategory: UInt32 = 0x1 << 2
@@ -21,8 +22,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var score: Int = 0
     
     override init() {
-        score = 0
         super.init()
+        
+        score = 0
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -146,6 +148,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             }
         }
+        
+        let scoreLabel = addScoreLabel()
+        self.addChild(scoreLabel)
     
         runAction(SKAction.repeatActionForever(
             SKAction.sequence([
@@ -157,8 +162,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             ))
     }
     
+    func addScoreLabel() -> SKLabelNode {
+        scoreLabel.fontSize = 25
+        scoreLabel.fontColor = SKColor.blackColor()
+        scoreLabel.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMaxY(self.frame) - 25)
+        scoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.Center
+        scoreLabel.text = "\(score)"
+        return scoreLabel
+    }
+    
+    func updateScoreLabel() {
+        scoreLabel.text = "\(score)"
+    }
+    
     func characterHasCaughtCupcake(cupcake:SKSpriteNode) {
         score += 10
+        updateScoreLabel()
         print("nom: \(score)")
         
         cupcake.removeFromParent()
@@ -166,6 +185,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func characterHasCaughtKale(kale: SKSpriteNode) {
         score -= 10
+        updateScoreLabel()
         print("EWWWW: \(score)")
         
          kale.removeFromParent()
