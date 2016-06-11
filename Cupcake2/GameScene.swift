@@ -12,12 +12,9 @@ import SpriteKit
 let kPlayerSpeed = 250
 let character = SKSpriteNode(imageNamed: "daisy")
 
-enum PhysicsCategory: UInt32 {
-    case None = 0
-    case Character = 0b001
-    case Cupcake = 0b010
-    case Kale = 0b100
-}
+let characterCategory: UInt32 = 0x1 << 1
+let cupcakeCategory: UInt32 = 0x1 << 2
+let kaleCategory: UInt32 = 0x1 << 3
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
@@ -52,7 +49,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsBody.dynamic = false
         physicsBody.usesPreciseCollisionDetection = true
         physicsBody.affectedByGravity = false
-        physicsBody.contactTestBitMask = PhysicsCategory.Character.rawValue
+        physicsBody.contactTestBitMask = cupcakeCategory | kaleCategory
+        physicsBody.categoryBitMask = characterCategory
         
         self.addChild(character)
     }
@@ -76,7 +74,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsBody.dynamic = true
         physicsBody.usesPreciseCollisionDetection = true
         physicsBody.affectedByGravity = true;
-        physicsBody.contactTestBitMask = PhysicsCategory.Cupcake.rawValue
+        physicsBody.contactTestBitMask = characterCategory | kaleCategory
+        physicsBody.categoryBitMask = cupcakeCategory
         
         let spin = SKAction.rotateByAngle(CGFloat(M_PI), duration:0.25)
         
@@ -103,7 +102,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsBody.dynamic = true
         physicsBody.usesPreciseCollisionDetection = true
         physicsBody.affectedByGravity = true;
-        physicsBody.contactTestBitMask = PhysicsCategory.Kale.rawValue
+        physicsBody.contactTestBitMask = characterCategory | cupcakeCategory
+        physicsBody.categoryBitMask = kaleCategory
         
         let spin = SKAction.rotateByAngle(CGFloat(M_PI), duration:0.25)
         
@@ -183,15 +183,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             secondBody = contact.bodyA
         }
         
-        //now I gotta change this physics category business
-        // close? 
-        if (firstBody.categoryBitMask == PhysicsCategory.Cupcake.rawValue) &&
-            (secondBody.categoryBitMask == PhysicsCategory.Character.rawValue) {
-            guard let cupcake = firstBody.node else { return }
+        if (firstBody.categoryBitMask == characterCategory && secondBody.categoryBitMask == cupcakeCategory) {
+            guard let cupcake = secondBody.node else { return }
             characterHasCaughtCupcake(cupcake as! SKSpriteNode)
-        } else if (firstBody.categoryBitMask == PhysicsCategory.Kale.rawValue) &&
-            (secondBody.categoryBitMask == PhysicsCategory.Character.rawValue) {
-            characterHasCaughtKale(firstBody.node as! SKSpriteNode)
+            print("Caught a cupcake yay!")
+        } else if (firstBody.categoryBitMask == characterCategory && secondBody.categoryBitMask == kaleCategory) {
+            guard let kale = secondBody.node else { return }
+            characterHasCaughtKale(kale as! SKSpriteNode)
+            print("Caught kale EWWWWW")
         }
     }
     
