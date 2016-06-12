@@ -12,10 +12,17 @@ import SpriteKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var score: Int = 0
+    var levelTimerValue: Int = 10 {
+        didSet {
+            timerLabel.text = "Time left: \(levelTimerValue)"
+        }
+    }
     
     let playerSpeed = 250
     let character = SKSpriteNode(imageNamed: "daisy")
     let scoreLabel = SKLabelNode(fontNamed: "Avenir")
+    let timerLabel = SKLabelNode(fontNamed: "Avenir")
+    let winLossLabel = SKLabelNode(fontNamed: "Avenir")
     
     let characterCategory: UInt32 = 0x1 << 1
     let cupcakeCategory: UInt32 = 0x1 << 2
@@ -151,6 +158,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let scoreLabel = addScoreLabel()
         self.addChild(scoreLabel)
+            
+        let timerLabel = addtimerLabel()
+        addChild(timerLabel)
+        startCountdown()
     
         runAction(SKAction.repeatActionForever(
             SKAction.sequence([
@@ -159,16 +170,70 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 SKAction.runBlock(createKaleNode),
                 SKAction.waitForDuration(0.05)
                 ])
-            ))
+            ), withKey: "stuffHappens")
+    }
+    
+    func startCountdown() {
+        let wait = SKAction.waitForDuration(0.5) //change countdown speed here
+        let block = SKAction.runBlock({
+            [unowned self] in
+            
+            if self.levelTimerValue > 0{
+                self.levelTimerValue -= 1
+            } else {
+                self.removeActionForKey("countdown")
+                if self.didLoseGame() {
+                    self.removeActionForKey("stuffHappens")
+                }
+            }
+            })
+        let sequence = SKAction.sequence([wait,block])
+        
+        runAction(SKAction.repeatActionForever(sequence), withKey: "countdown")
+    }
+    
+    func didLoseGame() -> Bool {
+        let didWin = self.score > 100
+        if self.levelTimerValue == 0 && didWin {
+            let resultLabel = addWinLossLabelWithText("🎉 HOORAY! You won! 🎉")
+            self.addChild(resultLabel)
+            return true
+        } else if self.levelTimerValue == 0 && !didWin {
+            let resultLabel = addWinLossLabelWithText("💩 GIANT LOSER! 💩")
+            self.addChild(resultLabel)
+            return true
+        }
+        
+        return false
+    }
+    
+    func addWinLossLabelWithText(result: String) -> SKLabelNode {
+        winLossLabel.fontSize = 40
+        winLossLabel.color = SKColor.blackColor()
+        winLossLabel.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMidY(self.frame))
+        winLossLabel.horizontalAlignmentMode = .Center
+        winLossLabel.text = "\(result)"
+        
+        return winLossLabel
     }
     
     func addScoreLabel() -> SKLabelNode {
         scoreLabel.fontSize = 25
         scoreLabel.fontColor = SKColor.blackColor()
         scoreLabel.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMaxY(self.frame) - 25)
-        scoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.Center
+        scoreLabel.horizontalAlignmentMode = .Center
         scoreLabel.text = "\(score)"
+        
         return scoreLabel
+    }
+    
+    func addtimerLabel() -> SKLabelNode {
+        timerLabel.fontColor = SKColor.blackColor()
+        timerLabel.fontSize = 25
+        timerLabel.position = CGPointMake(CGRectGetMidX(self.frame) + 100, CGRectGetMaxY(self.frame) - 25)
+        timerLabel.text = "Time left: \(levelTimerValue)"
+        
+        return timerLabel
     }
     
     func updateScoreLabel() {
