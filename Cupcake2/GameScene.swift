@@ -12,7 +12,7 @@ import SpriteKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var score: Int = 0
-    var levelTimerValue: Int = 10 {
+    var levelTimerValue: Int = 30 {
         didSet {
             timerLabel.text = "Time left: \(levelTimerValue)"
         }
